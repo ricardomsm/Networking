@@ -3,10 +3,7 @@ import XCTest
 
 final class MockURLProtocol: URLProtocol {
     
-    static var respond: (URLRequest) throws -> Data = { request in
-        
-        return try JSONEncoder().encode("Test")
-    }
+    static var respond: (URLRequest) throws -> Data = { _ in try JSONEncoder().encode("Test") }
  
     override class func canInit(with request: URLRequest) -> Bool { true }
 

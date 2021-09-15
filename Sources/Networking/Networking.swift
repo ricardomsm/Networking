@@ -16,7 +16,8 @@ public struct Networking {
         
         session
             .dataTaskPublisher(for: request)
-            .tryMap { data, response in
+            .tryCompactMap { data, response in
+                guard let response = response as? HTTPURLResponse else { return nil }
                 let decodedData = try decoder.decode(T.self, from: data)
                 return Response(data: decodedData, response: response)
             }
@@ -30,9 +31,9 @@ public extension Networking {
     struct Response<T> {
         
         public let data: T
-        public let response: URLResponse
+        public let response: HTTPURLResponse
         
-        public init(data: T, response: URLResponse) {
+        public init(data: T, response: HTTPURLResponse) {
             self.data = data
             self.response = response
         }

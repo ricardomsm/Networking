@@ -36,7 +36,7 @@ final class NetworkingTests: XCTestCase {
         
         let mockResponse = Networking.Response<String>(
             data: "Test",
-            response: .init(url: url, mimeType: nil, expectedContentLength: 0, textEncodingName: nil)
+            response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: nil)!
         )
         
         let request = URLRequest(url: url)
@@ -48,6 +48,8 @@ final class NetworkingTests: XCTestCase {
                 receiveValue: { (response: Networking.Response<String>) in
                     expectation.fulfill()
                     XCTAssertEqual(response.response.url, mockResponse.response.url)
+                    XCTAssertEqual(response.response.statusCode, mockResponse.response.statusCode)
+                    XCTAssertNil(response.response.allHeaderFields)
             })
             .store(in: &cancellableBag)
     }
