@@ -1,3 +1,3 @@
 # Networking
 
-A simple wrapper around `URLSession` and its `dataTask` publisher for dealing with `HTTP` requests.
+A simple wrapper around `URLSession` and its `dataTask` with `Swift`'s new concurrency tools ✨
