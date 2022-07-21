@@ -1,12 +1,9 @@
-import Combine
-import XCTest
 import Networking
+import XCTest
 
 final class NetworkingTests: XCTestCase {
 
     private var sut: Networking!
-    
-    private var cancellableBag = Set<AnyCancellable>()
     
     override func setUp() {
         super.setUp()
@@ -15,7 +12,7 @@ final class NetworkingTests: XCTestCase {
         configuration.protocolClasses = [MockURLProtocol.self]
         URLProtocol.registerClass(MockURLProtocol.self)
         
-        sut = .init(session: URLSession(configuration: configuration))
+		sut = .live(session: .init(configuration: configuration))
     }
     
     override func tearDown() {
@@ -26,31 +23,20 @@ final class NetworkingTests: XCTestCase {
         super.tearDown()
     }
     
-    func testRequest_ShouldReturnSameURL() {
-        
-        let expectation = expectation(description: "request expectation")
-        
-        defer { waitForExpectations(timeout: 1) }
-        
+    func testRequest_ShouldReturnSameURL() async throws {
+
         let url = URL(string: "http://test.com")!
         
         let mockResponse = Networking.Response<String>(
             data: "Test",
-            response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: nil)!
+			response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: [:])!
         )
         
         let request = URLRequest(url: url)
-        
-        sut
-            .request(request)
-            .sink(
-                receiveCompletion: { _ in },
-                receiveValue: { (response: Networking.Response<String>) in
-                    expectation.fulfill()
-                    XCTAssertEqual(response.response.url, mockResponse.response.url)
-                    XCTAssertEqual(response.response.statusCode, mockResponse.response.statusCode)
-                    XCTAssertNil(response.response.allHeaderFields)
-            })
-            .store(in: &cancellableBag)
+		let response: Networking.Response<String> = try await sut.apiRequest(urlRequest: request)
+
+		XCTAssertEqual(response.data, mockResponse.data)
+		XCTAssertEqual(response.response.url, mockResponse.response.url)
+		XCTAssertEqual(response.response.statusCode, mockResponse.response.statusCode)
     }
 }

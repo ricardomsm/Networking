@@ -2,43 +2,43 @@ import Combine
 import Foundation
 
 public struct Networking {
-    
-    private let session: URLSession
-
-    public init(session: URLSession = .shared) {
-        self.session = session
-    }
-    
-    public func request<T: Decodable>(
-        _ request: URLRequest,
-        decoder: JSONDecoder = .init()
-    ) -> AnyPublisher<Response<T>, Error> {
-        
-        session
-            .dataTaskPublisher(for: request)
-            .tryCompactMap { data, response in
-                guard let response = response as? HTTPURLResponse else { return nil }
-                let decodedData = try decoder.decode(T.self, from: data)
-                return Response(data: decodedData, response: response)
-            }
-            .receive(on: session.delegateQueue)
-            .eraseToAnyPublisher()
-    }
+	var request: (URLRequest, JSONDecoder) async throws -> (Data, HTTPURLResponse)
 }
 
-public extension Networking {
-    
-    struct Response<T> {
-        
-        public let data: T
-        public let response: HTTPURLResponse
-        
-        public init(data: T, response: HTTPURLResponse) {
-            self.data = data
-            self.response = response
-        }
-    }
+extension Networking {
+
+	enum Error: Swift.Error {
+		case invalidResponse
+	}
+
+	public struct Response<T> {
+		public let data: T
+		public let response: HTTPURLResponse
+
+		public init(data: T, response: HTTPURLResponse) {
+			self.data = data
+			self.response = response
+		}
+	}
 }
 
-extension Networking.Response: Equatable where T: Equatable {}
+extension Networking {
+	public static func live(session: URLSession = .shared) -> Self {
+		.init(
+			request: { request, decoder in
+				let (data, response) = try await session.data(for: request)
+				guard let urlResponse = response as? HTTPURLResponse else { throw Error.invalidResponse }
+				return (data, urlResponse)
+			}
+		)
+	}
 
+	public func apiRequest<T: Decodable>(
+		urlRequest: URLRequest,
+		decoder: JSONDecoder = .init()
+	) async throws -> Response<T> {
+		let (data, response) = try await request(urlRequest, decoder)
+		let decodedData = try decoder.decode(T.self, from: data)
+		return Response(data: decodedData, response: response)
+	}
+}
