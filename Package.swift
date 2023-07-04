@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "Networking",
-    platforms: [.iOS("15"), .macOS("10.15")],
+    platforms: [.iOS("16"), .macOS("13")],
 	// MARK: - Products
     products: [
         .library(name: "Networking", targets: ["Networking"]),
