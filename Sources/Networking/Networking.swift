@@ -33,6 +33,8 @@ extension Networking {
 		)
 	}
 
+	public static func mock(response: @escaping () -> (Data, HTTPURLResponse)) -> Self { Self { _, _ in response() } }
+
 	public func apiRequest<T: Decodable>(
 		urlRequest: URLRequest,
 		decoder: JSONDecoder = .init()
