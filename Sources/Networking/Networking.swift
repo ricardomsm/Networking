@@ -33,7 +33,9 @@ extension Networking {
 		)
 	}
 
-	public static func mock(response: @escaping () -> (Data, HTTPURLResponse)) -> Self { Self { _, _ in response() } }
+	public static func mock(response: @escaping () throws -> (Data, HTTPURLResponse)) -> Self {
+		Self { _, _ in try response() }
+	}
 
 	public func apiRequest<T: Decodable>(
 		urlRequest: URLRequest,
